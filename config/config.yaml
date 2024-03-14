@@ -1,0 +1,33 @@
+defaults:
+   - _self_
+   - dataset: cityscapes
+
+train_loader:
+  _target_: ${dataset.dataloader}
+  data_dir: ${dataset.data_dir}
+  batch_size: 8
+  base_size: 400
+  crop_size: 380
+  augment: True
+  shuffle: True
+  scale: True
+  flip: True
+  rotate: True
+  blur: False
+  split: train
+  num_workers: 8
+  palette: ${dataset.palette}
+  id_to_train_id: ${dataset.id_to_train_id}
+
+val_loader:
+  _target_: ${dataset.dataloader}
+  data_dir: ${dataset.data_dir}
+  batch_size: 8
+  crop_size: 480
+  val: True
+  split: val
+  num_workers: 4
+  palette: ${dataset.palette}
+  id_to_train_id: ${dataset.id_to_train_id}
+
+resume:
