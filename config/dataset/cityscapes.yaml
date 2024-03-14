@@ -1,4 +1,4 @@
-dataloader: src.dataloaders.CityScapes
+dataloader: src.dataloaders.Cityscapes
 
 data_dir: C:\Documents\Datasets\CityScapes
 

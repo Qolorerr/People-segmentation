@@ -1,3 +1,4 @@
+import numpy as np
 from albumentations.pytorch import ToTensorV2
 from torch.utils.data import Dataset
 import albumentations as A
@@ -14,7 +15,7 @@ class BaseDataset(Dataset):
         base_size: int | None = None,
         augment: bool = True,
         val: bool = False,
-        crop_size: int | None = 321,
+        crop_size: int | None = None,
         scale: bool = True,
         flip: bool = True,
         rotate: bool = False,
@@ -27,12 +28,11 @@ class BaseDataset(Dataset):
         self.std = std
         self.augment = augment
         self.crop_size = crop_size
-        if self.augment:
-            self.base_size = base_size
-            self.scale = scale
-            self.flip = flip
-            self.rotate = rotate
-            self.blur = blur
+        self.base_size = base_size
+        self.scale = scale
+        self.flip = flip
+        self.rotate = rotate
+        self.blur = blur
         self.val = val
         self.files = []
         self._set_files()
@@ -87,7 +87,7 @@ class BaseDataset(Dataset):
     def __len__(self) -> int:
         return len(self.files)
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int) -> tuple[np.ndarray, np.ndarray, str] | tuple[np.ndarray, np.ndarray]:
         image, label, image_id = self._load_data(index)
         if self.val:
             transformed = self.val_augmentation(image=image, mask=label)

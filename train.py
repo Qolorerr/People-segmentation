@@ -8,7 +8,7 @@ from src.base import BaseDataLoader
 from src.base import BaseModel
 
 
-@hydra.main(version_base='1.1', config_path="config", config_name="config")
+@hydra.main(version_base='1.2', config_path="config", config_name="config")
 def main(cfg: DictConfig):
     if cfg.resume:
         resume = cfg.resume
