@@ -1,1 +1,1 @@
-from .cityscapes import CityscapesDataset, Cityscapes
+from .cityscapes import CityscapesDataset

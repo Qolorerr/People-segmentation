@@ -3,12 +3,10 @@ import torch
 import torch.nn as nn
 from hydra.utils import instantiate
 from omegaconf import DictConfig
-
-from src.base import BaseDataLoader
-from src.base import BaseModel
+from torch.utils.data import DataLoader
 
 
-@hydra.main(version_base='1.2', config_path="config", config_name="config")
+@hydra.main(version_base="1.2", config_path="config", config_name="config")
 def main(cfg: DictConfig):
     if cfg.resume:
         resume = cfg.resume
@@ -16,8 +14,8 @@ def main(cfg: DictConfig):
         cfg.resume = resume
 
     # DATA LOADERS
-    train_loader: BaseDataLoader = instantiate(cfg.train_loader)
-    val_loader: BaseDataLoader = instantiate(cfg.val_loader)
+    train_loader: DataLoader = instantiate(cfg.train_loader)
+    val_loader: DataLoader = instantiate(cfg.val_loader)
 
     # # MODEL
     # model: BaseModel = instantiate(cfg.model, train_loader.dataset.num_classes)

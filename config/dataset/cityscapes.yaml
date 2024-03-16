@@ -1,5 +1,3 @@
-dataloader: src.dataloaders.Cityscapes
-
 data_dir: C:\Documents\Datasets\CityScapes
 
 palette: [128,64,128,244,35,232,70,70,70,102,102,156,190,153,153,153,153,153,
