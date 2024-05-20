@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.typing import NDArray
 from torch.utils.data import Dataset
 import albumentations
 
@@ -16,7 +17,7 @@ class BaseDataset(Dataset):
         self.split = split
         self.files = []
         self._set_files()
-        self.transformation = albumentations.Compose(transforms)
+        self.transforms = transforms
         self.return_id = return_id
         self.palette = palette
 
@@ -31,13 +32,13 @@ class BaseDataset(Dataset):
 
     def __getitem__(
         self, index: int
-    ) -> tuple[np.ndarray, np.ndarray, str] | tuple[np.ndarray, np.ndarray]:
-        image, label, image_id = self._load_data(index)
-        transformed = self.transformation(image=image, mask=label)
+    ) -> tuple[NDArray[np.float_], NDArray[np.uint8]]:
+        image, label = self._load_data(index)
+        # print(image.shape, label.shape)
+        # print(image.dtype, label.dtype)
+        transformed = self.transforms(image=image, mask=label)
         image, label = transformed["image"], transformed["mask"]
-        if self.return_id:
-            return image, label, image_id
-        return image, label
+        return image.float(), label.float()
 
     def __repr__(self) -> str:
         fmt_str = f"Dataset: {self.__class__.__name__}\n"

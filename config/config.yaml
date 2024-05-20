@@ -2,6 +2,9 @@ defaults:
    - _self_
    - dataset: cityscapes
 
+name: PSPNet
+n_gpu: 1
+use_synch_bn: False
 crop_size: 400
 mean: [0.28689529, 0.32513294, 0.28389176]
 std: [0.17613647, 0.18099176, 0.17772235]
@@ -30,10 +33,11 @@ train_transforms:
     mean: ${mean}
     std: ${std}
   - _target_: albumentations.pytorch.ToTensorV2
+    transpose_mask: True
 
 val_transforms:
   - _target_: albumentations.SmallestMaxSize
-    max_size:
+    max_size: ${crop_size}
   - _target_: albumentations.CenterCrop
     height: ${crop_size}
     width: ${crop_size}
@@ -41,6 +45,7 @@ val_transforms:
     mean: ${mean}
     std: ${std}
   - _target_: albumentations.pytorch.ToTensorV2
+    transpose_mask: True
 
 train_loader:
   _target_: torch.utils.data.DataLoader
@@ -49,11 +54,14 @@ train_loader:
     root: ${dataset.data_dir}
     split: train
     palette: ${dataset.palette}
-    transforms: ${train_transforms}
+    transforms:
+      _target_: albumentations.Compose
+      transforms: ${train_transforms}
     id_to_train_id: ${dataset.id_to_train_id}
+    load_limit: 32
   shuffle: True
   batch_size: 8
-  num_workers: 8
+  num_workers: 0
 
 val_loader:
   _target_: torch.utils.data.DataLoader
@@ -62,9 +70,47 @@ val_loader:
     root: ${dataset.data_dir}
     split: val
     palette: ${dataset.palette}
-    transforms: ${val_transforms}
+    transforms:
+      _target_: albumentations.Compose
+      transforms: ${val_transforms}
     id_to_train_id: ${dataset.id_to_train_id}
   batch_size: 8
-  num_workers: 4
+  num_workers: 0
+
+model:
+  _target_: src.models.PSPNet
+#  backbone: resnet50
+#  pretrained: True
+  freeze_bn: False
+  freeze_backbone: True
+
+differential_lr: True
+
+loss:
+  _target_: torch.nn.CrossEntropyLoss
+#  ignore_index: ${dataset.ignore_label}
+
+metric:
+  _target_: src.utils.PixAccIoUMetric
+  reduction: macro
+  threshold_value: 0.5
+
+optimizer:
+  _target_: torch.optim.SGD
+  lr: 0.01
+  weight_decay: 1e-4
+  momentum: 0.9
+
+trainer:
+  epochs: 80
+  save_dir: saved\
+  save_period: 1
+  monitor: max mIoU
+  early_stop: 10
+  tensorboard: True
+  log_dir: saved/runs
+  log_per_iter: 20
+  val: True
+  val_per_epochs: 5
 
 resume:

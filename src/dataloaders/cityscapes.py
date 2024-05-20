@@ -3,15 +3,17 @@ from glob import glob
 
 import cv2
 import numpy as np
+from numpy.typing import NDArray
 
 from src.base import BaseDataset
 
 
 class CityscapesDataset(BaseDataset):
-    def __init__(self, id_to_train_id: dict[int, int], mode: str = "fine", **kwargs):
+    def __init__(self, id_to_train_id: dict[int, int], mode: str = "fine", load_limit: int | None = None, **kwargs):
         self.id_to_train_id = id_to_train_id
         self.num_classes = len(set(id_to_train_id.values()))
         self.mode = mode
+        self.load_limit = load_limit
         super().__init__(**kwargs)
 
     def _set_files(self) -> None:
@@ -43,14 +45,26 @@ class CityscapesDataset(BaseDataset):
             label_paths.extend(
                 sorted(glob(os.path.join(label_folder_path, city, "*_gtFine_labelIds.png")))
             )
+            if self.load_limit is not None and len(image_paths) > self.load_limit:
+                break
         self.files = list(zip(image_paths, label_paths))
 
-    def _load_data(self, index: int) -> tuple[np.ndarray, np.ndarray, str]:
+    def _convert_to_segmentation_mask(self, mask: NDArray[np.uint8]) -> NDArray[np.uint8]:
+        height, width = mask.shape
+        labels = sorted(set(self.id_to_train_id.values()))
+        segmentation_mask = np.zeros((height, width, len(labels)), dtype=np.float32)
+        for label_index, label in enumerate(labels):
+            segmentation_mask[:, :, label_index] = (mask == label).astype(np.float32)
+
+        return segmentation_mask
+
+    def _load_data(self, index: int) -> tuple[NDArray[np.uint8], NDArray[np.uint8]]:
         image_path, label_path = self.files[index]
-        image_id = os.path.splitext(os.path.basename(image_path))[0]
         image = cv2.imread(image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.uint8)
         label = cv2.imread(label_path)
-        label = cv2.cvtColor(label, cv2.COLOR_BGR2RGB).astype(np.int32)
-        label = np.vectorize(self.id_to_train_id.__getitem__)(label)
-        return image, label, image_id
+        label = cv2.cvtColor(label, cv2.COLOR_BGR2GRAY).astype(np.uint8)
+        for k, v in self.id_to_train_id.items():
+            label[label == k] = v
+        label = self._convert_to_segmentation_mask(label)
+        return image, label
