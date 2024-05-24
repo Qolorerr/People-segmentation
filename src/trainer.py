@@ -13,6 +13,7 @@ from torch.utils import tensorboard
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+from src.utils import DiceCrossEntropyLoss
 from src.utils.metrics import AverageMeter, PixAccIoUMetricT
 
 
@@ -110,12 +111,18 @@ class Trainer:
             self.optimizer.zero_grad()
             outputs = self.model(inputs)
             loss = self.loss(outputs, targets)
+            if isinstance(self.loss, DiceCrossEntropyLoss):
+                dice_loss = loss[0].item()
+                ce_loss = loss[1].item()
+                loss = loss[0] + loss[1]
+            else:
+                dice_loss, ce_loss = None, None
 
             # METRICS
             self.total_loss.update(loss.item())
             metrics = self.metric(outputs, targets)
             self._update_accuracy_metrics(metrics)
-            self._print_metrics(tbar, epoch, metrics, "TRAIN")
+            self._print_metrics(tbar, epoch, metrics, "TRAIN", dice_loss=dice_loss, ce_loss=ce_loss)
 
             self.accelerator.backward(loss)
             self.optimizer.step()
@@ -156,10 +163,17 @@ class Trainer:
             with torch.no_grad():
                 output = self.model(inputs)
                 loss = self.loss(output, targets)
+                if isinstance(self.loss, DiceCrossEntropyLoss):
+                    dice_loss = loss[0].item()
+                    ce_loss = loss[1].item()
+                    loss = loss[0] + loss[1]
+                else:
+                    dice_loss, ce_loss = None, None
+
                 self.total_loss.update(loss.item())
                 metrics = self.metric(output, targets)
                 self._update_accuracy_metrics(metrics)
-                self._print_metrics(tbar, epoch, metrics, "EVAL")
+                self._print_metrics(tbar, epoch, metrics, "EVAL", dice_loss=dice_loss, ce_loss=ce_loss)
 
         # TODO: Visualisation of images
 
@@ -225,9 +239,15 @@ class Trainer:
         for k, v in [("pixAcc", self.total_pixAcc.avg), ("mIoU", self.total_IoU.avg)]:
             self.writer.add_scalar(f"{self.wrt_mode}/{k}", v, self.wrt_step)
 
-    def _print_metrics(self, tbar: tqdm, epoch: int, metrics: PixAccIoUMetricT, mode: str = "TRAIN") -> None:
-        message = "{} ({}) | Loss: {:.3f}, PixelAcc: {:.2f}, Mean IoU: {:.2f} |"
+    def _print_metrics(self, tbar: tqdm, epoch: int, metrics: PixAccIoUMetricT, mode: str = "TRAIN", **kwargs) -> None:
+        message = "{} ({}) | Loss: {:.3f}, PixelAcc: {:.2f}, Mean IoU: {:.2f}"
         message = message.format(mode, epoch, self.total_loss.avg, metrics.pixAcc, metrics.IoU)
+        for key, value in kwargs.items():
+            if value is not None:
+                new_arg = ", {}: {:.3f}"
+                new_arg = new_arg.format(key, value)
+                message += new_arg
+        message += " |"
         tbar.set_description(message)
 
     def _reset_metrics(self) -> None:

@@ -87,8 +87,8 @@ model:
 differential_lr: True
 
 loss:
-  _target_: torch.nn.CrossEntropyLoss
-#  ignore_index: ${dataset.ignore_label}
+  _target_: src.utils.DiceCrossEntropyLoss
+  weight: 0.15
 
 metric:
   _target_: src.utils.PixAccIoUMetric
