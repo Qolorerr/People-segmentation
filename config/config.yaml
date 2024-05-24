@@ -12,7 +12,7 @@ std: [0.17613647, 0.18099176, 0.17772235]
 train_transforms:
   - _target_: albumentations.SmallestMaxSize
     max_size: ${crop_size}
-  - _target_: albumentations.CenterCrop
+  - _target_: albumentations.RandomCrop
     height: ${crop_size}
     width: ${crop_size}
   - _target_: albumentations.AdvancedBlur
@@ -38,7 +38,7 @@ train_transforms:
 val_transforms:
   - _target_: albumentations.SmallestMaxSize
     max_size: ${crop_size}
-  - _target_: albumentations.CenterCrop
+  - _target_: albumentations.RandomCrop
     height: ${crop_size}
     width: ${crop_size}
   - _target_: albumentations.Normalize
@@ -95,11 +95,18 @@ metric:
   reduction: macro
   threshold_value: 0.5
 
+#optimizer:
+#  _target_: torch.optim.SGD
+#  lr: 0.01
+#  weight_decay: 1e-4
+#  momentum: 0.9
+
 optimizer:
-  _target_: torch.optim.SGD
-  lr: 0.01
+  _target_: torch.optim.AdamW
+  lr: 0.001
   weight_decay: 1e-4
-  momentum: 0.9
+  eps: 1e-08
+
 
 trainer:
   epochs: 80
