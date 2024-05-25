@@ -8,6 +8,7 @@ use_synch_bn: False
 crop_size: 400
 mean: [0.28689529, 0.32513294, 0.28389176]
 std: [0.17613647, 0.18099176, 0.17772235]
+threshold_value: 0.5
 
 train_transforms:
   - _target_: albumentations.SmallestMaxSize
@@ -53,7 +54,6 @@ train_loader:
     _target_: src.dataloaders.CityscapesDataset
     root: ${dataset.data_dir}
     split: train
-    palette: ${dataset.palette}
     transforms:
       _target_: albumentations.Compose
       transforms: ${train_transforms}
@@ -69,11 +69,11 @@ val_loader:
     _target_: src.dataloaders.CityscapesDataset
     root: ${dataset.data_dir}
     split: val
-    palette: ${dataset.palette}
     transforms:
       _target_: albumentations.Compose
       transforms: ${val_transforms}
     id_to_train_id: ${dataset.id_to_train_id}
+    load_limit: 32
   batch_size: 8
   num_workers: 0
 
@@ -93,7 +93,7 @@ loss:
 metric:
   _target_: src.utils.PixAccIoUMetric
   reduction: macro
-  threshold_value: 0.5
+  threshold_value: ${threshold_value}
 
 #optimizer:
 #  _target_: torch.optim.SGD
@@ -107,6 +107,10 @@ optimizer:
   weight_decay: 1e-4
   eps: 1e-08
 
+visualizer:
+  _target_: src.utils.Visualization
+  palette: ${dataset.palette}
+  threshold_value: ${threshold_value}
 
 trainer:
   epochs: 80

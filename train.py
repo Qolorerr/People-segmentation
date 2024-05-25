@@ -26,6 +26,7 @@ def main(cfg: DictConfig):
     # LOSS & METRIC
     loss: nn.Module = instantiate(cfg.loss)
     metric: nn.Module = instantiate(cfg.metric, classes_num=train_loader.dataset.num_classes)
+    visualizer = instantiate(cfg.visualizer)
 
     # TRAINING
     trainer = Trainer(
@@ -37,6 +38,7 @@ def main(cfg: DictConfig):
         accelerator=Accelerator(),
         train_loader=train_loader,
         val_loader=val_loader,
+        visualizer=visualizer,
     )
 
     trainer.train()

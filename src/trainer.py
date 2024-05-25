@@ -28,6 +28,7 @@ class Trainer:
         accelerator: Accelerator,
         train_loader: DataLoader,
         val_loader: DataLoader | None = None,
+        visualizer = None,
     ):
         self.model = model
         self.loss = loss
@@ -35,6 +36,7 @@ class Trainer:
         self.config = config
         self.train_loader = train_loader
         self.val_loader = val_loader
+        self.visualizer = visualizer
         self.logger = logging.getLogger(self.__class__.__name__)
         self.do_validation = self.config["trainer"]["val"]
         self.start_epoch = 1
@@ -173,13 +175,23 @@ class Trainer:
                 self.total_loss.update(loss.item())
                 metrics = self.metric(output, targets)
                 self._update_accuracy_metrics(metrics)
+                if self.visualizer:
+                    self.visualizer.add_to_visual(output, targets)
                 self._print_metrics(tbar, epoch, metrics, "EVAL", dice_loss=dice_loss, ce_loss=ce_loss)
 
-        # TODO: Visualisation of images
+        # WRITING & VISUALIZING THE MASKS
+        if self.visualizer:
+            val_img = self.visualizer.flush_visual()
+            self.writer.add_image(
+                tag=f"{self.wrt_mode}/inputs_targets_predictions",
+                img_tensor=val_img,
+                global_step=self.wrt_step,
+                dataformats="CHW"
+            )
 
         # METRICS TO TENSORBOARD
         self.wrt_step = epoch * len(self.val_loader)
-        self.writer.add_scalar(f"{self.wrt_mode}/loss", self.total_loss.avg, self.wrt_step)
+        self.writer.add_scalar(tag=f"{self.wrt_mode}/loss", scalar_value=self.total_loss.avg, global_step=self.wrt_step)
         self._log_accuracy_metrics()
 
         log = {"loss": self.total_loss.avg, "pixAcc": self.total_pixAcc.avg, "mIoU": self.total_IoU.avg}

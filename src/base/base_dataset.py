@@ -9,7 +9,6 @@ class BaseDataset(Dataset):
         self,
         root: str,
         split: str,
-        palette: list[int],
         transforms: list[albumentations.BasicTransform],
         return_id: bool = False,
     ):
@@ -19,7 +18,6 @@ class BaseDataset(Dataset):
         self._set_files()
         self.transforms = transforms
         self.return_id = return_id
-        self.palette = palette
 
     def _set_files(self):
         raise NotImplementedError
