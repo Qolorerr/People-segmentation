@@ -1,0 +1,58 @@
+defaults:
+   - _self_
+   - dataset: cityscapes
+
+crop_size: 512
+mean: [0.28689529, 0.32513294, 0.28389176]
+std: [0.17613647, 0.18099176, 0.17772235]
+threshold_value: 0.8
+
+test_transforms:
+  - _target_: albumentations.SmallestMaxSize
+    max_size: ${crop_size}
+  - _target_: albumentations.RandomCrop
+    height: ${crop_size}
+    width: ${crop_size}
+  - _target_: albumentations.Normalize
+    mean: ${mean}
+    std: ${std}
+  - _target_: albumentations.pytorch.ToTensorV2
+    transpose_mask: True
+
+test_loader:
+  _target_: torch.utils.data.DataLoader
+  dataset:
+    _target_: src.datasets.CityscapesDataset
+    root: ${dataset.data_dir}
+    split: test
+    transforms:
+      _target_: albumentations.Compose
+      transforms: ${test_transforms}
+    id_to_train_id: ${dataset.id_to_train_id}
+    load_limit: 8
+  shuffle: True
+  batch_size: 4
+  num_workers: 2
+
+accelerator:
+  _target_: accelerate.Accelerator
+  cpu: False
+
+visualizer:
+  _target_: src.utils.Visualization
+  palette: ${dataset.palette}
+  mean: ${mean}
+  std: ${std}
+  threshold_value: ${threshold_value}
+  number_of_images: 20
+
+tester:
+  save_dir: saved\
+  tensorboard: True
+  log_dir: saved/runs
+
+save_file: D:\Programs\Projects\People-segmentation\saved\PSPNet\05-28_12-49\checkpoint-epoch20.pth
+
+name:
+
+model:

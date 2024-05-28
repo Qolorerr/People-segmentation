@@ -51,6 +51,24 @@ class CityscapesDataset(BaseDataset):
         # if self.load_limit:
         #     self.files = self.files[:self.load_limit]
 
+    def _set_test_files(self) -> None:
+        assert (self.mode == "fine" and self.split == "test")
+
+        # Get images and labels folders
+        image_folder_path = os.path.join(
+            self.root, "leftImg8bit_trainvaltest", "leftImg8bit", self.split
+        )
+
+        # Get all images and labels paths
+        image_paths = []
+        for city in os.listdir(image_folder_path):
+            image_paths.extend(sorted(glob(os.path.join(image_folder_path, city, "*.png"))))
+            if self.load_limit is not None and len(image_paths) > self.load_limit:
+                break
+        self.files = image_paths
+        # if self.load_limit:
+        #     self.files = self.files[:self.load_limit]
+
     def _convert_to_segmentation_mask(self, mask: NDArray[np.uint8]) -> NDArray[np.uint8]:
         height, width = mask.shape
         labels = sorted(set(self.id_to_train_id.values()))
@@ -70,3 +88,9 @@ class CityscapesDataset(BaseDataset):
             label[label == k] = v
         label = self._convert_to_segmentation_mask(label)
         return image, label
+
+    def _load_test_data(self, index: int) -> NDArray[np.uint8]:
+        image_path = self.files[index]
+        image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.uint8)
+        return image

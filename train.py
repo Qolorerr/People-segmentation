@@ -11,10 +11,6 @@ from src import Trainer
 
 @hydra.main(version_base="1.2", config_path="config", config_name="config")
 def main(cfg: DictConfig):
-    # if cfg.resume:
-    #     resume = cfg.resume
-    #     cfg = DictConfig(torch.load(cfg.resume)["config"])
-    #     cfg.resume = resume
 
     # DATA LOADERS
     train_loader: DataLoader = instantiate(cfg.train_loader)

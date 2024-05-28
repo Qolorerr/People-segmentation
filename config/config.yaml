@@ -2,8 +2,7 @@ defaults:
    - _self_
    - dataset: cityscapes
 
-name: PSPNet
-n_gpu: 1
+name: UNet
 use_synch_bn: False
 crop_size: 512
 mean: [0.28689529, 0.32513294, 0.28389176]
@@ -51,7 +50,7 @@ val_transforms:
 train_loader:
   _target_: torch.utils.data.DataLoader
   dataset:
-    _target_: src.dataloaders.CityscapesDataset
+    _target_: src.datasets.CityscapesDataset
     root: ${dataset.data_dir}
     split: train
     transforms:
@@ -66,7 +65,7 @@ train_loader:
 val_loader:
   _target_: torch.utils.data.DataLoader
   dataset:
-    _target_: src.dataloaders.CityscapesDataset
+    _target_: src.datasets.CityscapesDataset
     root: ${dataset.data_dir}
     split: val
     transforms:

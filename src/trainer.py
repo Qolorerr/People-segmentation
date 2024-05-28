@@ -96,16 +96,14 @@ class Trainer:
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
 
-        self.threshold_value = cfg_trainer.get("threshold_value", 0.5)
-
         if resume:
             self._resume_checkpoint(resume)
 
         self.wrt_mode, self.wrt_step = "train", 0
-        self.log_step = config["trainer"].get(
+        self.log_step = cfg_trainer.get(
             "log_per_iter", int(np.sqrt(self.train_loader.batch_size))
         )
-        if config["trainer"]["log_per_iter"]:
+        if cfg_trainer["log_per_iter"]:
             self.log_step = int(self.log_step / self.train_loader.batch_size) + 1
 
         self.num_classes = self.train_loader.dataset.num_classes
