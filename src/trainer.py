@@ -139,7 +139,7 @@ class Trainer:
             metrics = self.metric(outputs, targets)
             self._update_accuracy_metrics(metrics)
             if self.visualizer:
-                self.visualizer.add_to_visual(outputs, targets)
+                self.visualizer.add_to_visual(inputs, outputs, targets)
             self._print_metrics(tbar, epoch, metrics, "TRAIN", dice_loss=dice_loss, ce_loss=ce_loss)
 
             self.accelerator.backward(loss)
@@ -201,7 +201,7 @@ class Trainer:
                 metrics = self.metric(output, targets)
                 self._update_accuracy_metrics(metrics)
                 if self.visualizer:
-                    self.visualizer.add_to_visual(output, targets)
+                    self.visualizer.add_to_visual(inputs, output, targets)
                 self._print_metrics(tbar, epoch, metrics, "EVAL", dice_loss=dice_loss, ce_loss=ce_loss)
 
         # WRITING & VISUALIZING THE MASKS

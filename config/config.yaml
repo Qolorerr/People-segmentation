@@ -58,7 +58,7 @@ train_loader:
       _target_: albumentations.Compose
       transforms: ${train_transforms}
     id_to_train_id: ${dataset.id_to_train_id}
-#    load_limit: 8
+    load_limit: 8
   shuffle: True
   batch_size: 4
   num_workers: 2
@@ -73,7 +73,7 @@ val_loader:
       _target_: albumentations.Compose
       transforms: ${val_transforms}
     id_to_train_id: ${dataset.id_to_train_id}
-#    load_limit: 8
+    load_limit: 8
   batch_size: 4
   num_workers: 2
 
@@ -122,6 +122,8 @@ optimizer:
 visualizer:
   _target_: src.utils.Visualization
   palette: ${dataset.palette}
+  mean: ${mean}
+  std: ${std}
   threshold_value: ${threshold_value}
 
 trainer:
