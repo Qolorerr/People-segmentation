@@ -78,6 +78,20 @@ class Trainer:
         start_time = datetime.now().strftime("%m-%d_%H-%M")
         writer_dir = str(os.path.join(cfg_trainer["log_dir"], self.config["name"], start_time))
         self.writer = tensorboard.SummaryWriter(writer_dir)
+        info_to_write = [
+            "crop_size",
+            "threshold_value",
+            "train_loader",
+            "val_loader",
+            "model",
+            "optimizer",
+            "trainer",
+            "resume",
+        ]
+        for info in info_to_write:
+            self.writer.add_text(
+                f"info/{info}", str(self.config[info])
+            )
         self.checkpoint_dir = os.path.join(cfg_trainer["save_dir"], self.config["name"], start_time)
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
@@ -102,7 +116,7 @@ class Trainer:
 
     def _train_epoch(self, epoch: int) -> dict[str, np.float_]:
         self.model.train()
-        if self.config["model"]["freeze_bn"]:
+        if "freeze_bn" in self.config["model"] and self.config["model"]["freeze_bn"]:
             self.model.freeze_bn()
         self.wrt_mode = "train"
 
@@ -124,6 +138,8 @@ class Trainer:
             self.total_loss.update(loss.item())
             metrics = self.metric(outputs, targets)
             self._update_accuracy_metrics(metrics)
+            if self.visualizer:
+                self.visualizer.add_to_visual(outputs, targets)
             self._print_metrics(tbar, epoch, metrics, "TRAIN", dice_loss=dice_loss, ce_loss=ce_loss)
 
             self.accelerator.backward(loss)
@@ -135,9 +151,18 @@ class Trainer:
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
+        # WRITING & VISUALIZING THE MASKS
+        if self.visualizer:
+            val_img = self.visualizer.flush_visual()
+            self.writer.add_image(
+                tag=f"{self.wrt_mode}/inputs_targets_predictions",
+                img_tensor=val_img,
+                global_step=self.wrt_step,
+                dataformats="CHW"
+            )
+
         # METRICS TO TENSORBOARD
         self._log_accuracy_metrics()
-        # TODO: Find out what this doing
         for i, opt_group in enumerate(self.optimizer.param_groups):
             self.writer.add_scalar(
                 f"{self.wrt_mode}/Learning_rate_{i}", opt_group["lr"], self.wrt_step
@@ -276,7 +301,7 @@ class Trainer:
             "arch": type(self.model).__name__,
             "epoch": epoch,
             "state_dict": self.model.state_dict(),
-            "optimizer": self.optimizer.state_dict(),
+            # "optimizer": self.optimizer.state_dict(),
             "monitor_best": self.mnt_best,
             "config": self.config,
         }

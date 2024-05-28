@@ -5,10 +5,10 @@ defaults:
 name: PSPNet
 n_gpu: 1
 use_synch_bn: False
-crop_size: 400
+crop_size: 512
 mean: [0.28689529, 0.32513294, 0.28389176]
 std: [0.17613647, 0.18099176, 0.17772235]
-threshold_value: 0.5
+threshold_value: 0.8
 
 train_transforms:
   - _target_: albumentations.SmallestMaxSize
@@ -58,10 +58,10 @@ train_loader:
       _target_: albumentations.Compose
       transforms: ${train_transforms}
     id_to_train_id: ${dataset.id_to_train_id}
-    load_limit: 32
+#    load_limit: 8
   shuffle: True
-  batch_size: 8
-  num_workers: 0
+  batch_size: 4
+  num_workers: 2
 
 val_loader:
   _target_: torch.utils.data.DataLoader
@@ -73,22 +73,34 @@ val_loader:
       _target_: albumentations.Compose
       transforms: ${val_transforms}
     id_to_train_id: ${dataset.id_to_train_id}
-    load_limit: 32
-  batch_size: 8
-  num_workers: 0
+#    load_limit: 8
+  batch_size: 4
+  num_workers: 2
+
+accelerator:
+  _target_: accelerate.Accelerator
+  cpu: False
+#  mixed_precision: fp16
+
+#model:
+#  _target_: src.models.PSPNet
+#  backbone_name: resnet101
+#  freeze_bn: False
+#  freeze_backbone: False
 
 model:
-  _target_: src.models.PSPNet
-#  backbone: resnet50
-#  pretrained: True
-  freeze_bn: False
-  freeze_backbone: True
+  _target_: src.models.UNet
+  backbone_name: resnet50
 
 differential_lr: True
 
+#loss:
+#  _target_: src.utils.DiceCrossEntropyLoss
+#  weight: 0.15
+
 loss:
-  _target_: src.utils.DiceCrossEntropyLoss
-  weight: 0.15
+  _target_: src.utils.losses.BCEDiceBoundaryLoss
+  is_3d: False
 
 metric:
   _target_: src.utils.PixAccIoUMetric
@@ -103,7 +115,7 @@ metric:
 
 optimizer:
   _target_: torch.optim.AdamW
-  lr: 0.001
+  lr: 1e-4
   weight_decay: 1e-4
   eps: 1e-08
 
@@ -113,15 +125,15 @@ visualizer:
   threshold_value: ${threshold_value}
 
 trainer:
-  epochs: 80
+  epochs: 100
   save_dir: saved\
-  save_period: 1
+  save_period: 5
   monitor: max mIoU
-  early_stop: 10
+#  early_stop: 10
   tensorboard: True
   log_dir: saved/runs
   log_per_iter: 20
   val: True
-  val_per_epochs: 5
+  val_per_epochs: 2
 
 resume:

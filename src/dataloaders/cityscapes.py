@@ -48,6 +48,8 @@ class CityscapesDataset(BaseDataset):
             if self.load_limit is not None and len(image_paths) > self.load_limit:
                 break
         self.files = list(zip(image_paths, label_paths))
+        # if self.load_limit:
+        #     self.files = self.files[:self.load_limit]
 
     def _convert_to_segmentation_mask(self, mask: NDArray[np.uint8]) -> NDArray[np.uint8]:
         height, width = mask.shape

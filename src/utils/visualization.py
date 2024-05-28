@@ -26,9 +26,7 @@ class Visualization:
             output, target = self._colorize_mask(output), self._colorize_mask(target)
             images.extend([target, output])
         images = torch.stack(images, 0)
-        print(images.shape)
         images = make_grid(images.cpu(), nrow=2, padding=5)
-        print(images.shape)
         self.visual = []
         return images
 
