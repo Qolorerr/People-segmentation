@@ -23,7 +23,7 @@ class Visualization:
             return
         predict = cast(torch.Tensor, output > self.threshold_value).float()
         outputs = torch.argmax(predict, dim=1).long()
-        if target:
+        if target is not None:
             targets = torch.argmax(target, dim=1).long()
             self.visual.append([inputs.data.cpu()[0].permute(1, 2, 0), outputs.data.cpu()[0], targets.data.cpu()[0]])
         else:
