@@ -1,9 +1,19 @@
 import torch
 from torch import nn
 from torchvision import models
-from torchvision.models import ResNet18_Weights, ResNet34_Weights, ResNet50_Weights, ResNet101_Weights, \
-    ResNet152_Weights, VGG16_Weights, VGG19_Weights, DenseNet121_Weights, DenseNet161_Weights, DenseNet169_Weights, \
-    DenseNet201_Weights
+from torchvision.models import (
+    ResNet18_Weights,
+    ResNet34_Weights,
+    ResNet50_Weights,
+    ResNet101_Weights,
+    ResNet152_Weights,
+    VGG16_Weights,
+    VGG19_Weights,
+    DenseNet121_Weights,
+    DenseNet161_Weights,
+    DenseNet169_Weights,
+    DenseNet201_Weights,
+)
 
 
 def initialize_weights(*models):
@@ -21,33 +31,19 @@ def initialize_weights(*models):
 
 def get_backbone(name: str, pretrained=True) -> tuple[nn.Module, list[str | None], str]:
     if name == "resnet18":
-        backbone = models.resnet18(
-            weights=ResNet18_Weights.DEFAULT if pretrained else None
-        )
+        backbone = models.resnet18(weights=ResNet18_Weights.DEFAULT if pretrained else None)
     elif name == "resnet34":
-        backbone = models.resnet34(
-            weights=ResNet34_Weights.DEFAULT if pretrained else None
-        )
+        backbone = models.resnet34(weights=ResNet34_Weights.DEFAULT if pretrained else None)
     elif name == "resnet50":
-        backbone = models.resnet50(
-            weights=ResNet50_Weights.DEFAULT if pretrained else None
-        )
+        backbone = models.resnet50(weights=ResNet50_Weights.DEFAULT if pretrained else None)
     elif name == "resnet101":
-        backbone = models.resnet101(
-            weights=ResNet101_Weights.DEFAULT if pretrained else None
-        )
+        backbone = models.resnet101(weights=ResNet101_Weights.DEFAULT if pretrained else None)
     elif name == "resnet152":
-        backbone = models.resnet152(
-            weights=ResNet152_Weights.DEFAULT if pretrained else None
-        )
+        backbone = models.resnet152(weights=ResNet152_Weights.DEFAULT if pretrained else None)
     elif name == "vgg16":
-        backbone = models.vgg16_bn(
-            weights=VGG16_Weights.DEFAULT if pretrained else None
-        ).features
+        backbone = models.vgg16_bn(weights=VGG16_Weights.DEFAULT if pretrained else None).features
     elif name == "vgg19":
-        backbone = models.vgg19_bn(
-            weights=VGG19_Weights.DEFAULT if pretrained else None
-        ).features
+        backbone = models.vgg19_bn(weights=VGG19_Weights.DEFAULT if pretrained else None).features
     elif name == "densenet121":
         backbone = models.densenet121(
             weights=DenseNet121_Weights.DEFAULT if pretrained else None

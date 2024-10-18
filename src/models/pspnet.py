@@ -27,7 +27,9 @@ class PyramidSceneModule(nn.Module):
         )
 
     @staticmethod
-    def _make_stages(in_channels: int, out_channels: int, bin_sz: int, norm_layer: nn.Module) -> nn.Sequential:
+    def _make_stages(
+        in_channels: int, out_channels: int, bin_sz: int, norm_layer: nn.Module
+    ) -> nn.Sequential:
         prior = nn.AdaptiveAvgPool2d(output_size=bin_sz)
         conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
         bn = norm_layer(out_channels)
@@ -63,7 +65,9 @@ class PSPNet(nn.Module):
 
         backbone_out_channels = self.backbone.fc.in_features
         self.main_branch = nn.Sequential(
-            PyramidSceneModule(backbone_out_channels, bin_sizes=[1, 2, 3, 6], norm_layer=nn.BatchNorm2d),
+            PyramidSceneModule(
+                backbone_out_channels, bin_sizes=[1, 2, 3, 6], norm_layer=nn.BatchNorm2d
+            ),
             nn.Conv2d(backbone_out_channels // 4, num_classes, kernel_size=1),
         )
 
@@ -83,7 +87,9 @@ class PSPNet(nn.Module):
         x = x[:, :, : input_size[0], : input_size[1]]
         return x
 
-    def forward_backbone(self, x: torch.Tensor) -> tuple[torch.Tensor, dict[str | None, torch.Tensor | None]]:
+    def forward_backbone(
+        self, x: torch.Tensor
+    ) -> tuple[torch.Tensor, dict[str | None, torch.Tensor | None]]:
         features: dict[str | None, torch.Tensor | None] = {}
         if None in self.shortcut_features:
             features[None] = None

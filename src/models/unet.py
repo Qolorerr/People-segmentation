@@ -35,9 +35,7 @@ class UNet(nn.Module):
         decoder_filters = decoder_filters[: len(self.shortcut_features)]
         decoder_filters_in = [bb_out_chs] + list(decoder_filters[:-1])
         num_blocks = len(self.shortcut_features)
-        for i, (filters_in, filters_out) in enumerate(
-            zip(decoder_filters_in, decoder_filters)
-        ):
+        for i, (filters_in, filters_out) in enumerate(zip(decoder_filters_in, decoder_filters)):
             self.upsample_blocks.append(
                 UpsampleBlock(
                     channels_in=filters_in,
@@ -152,9 +150,7 @@ class UpsampleBlock(nn.Module):
         )
         self.bn2 = nn.BatchNorm2d(channels_out) if use_bn else nn.Identity()
 
-    def forward(
-        self, x: torch.Tensor, skip_connection: torch.Tensor | None = None
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, skip_connection: torch.Tensor | None = None) -> torch.Tensor:
         x = self.up(x)
         if self.parametric:
             x = self.bn1(x)

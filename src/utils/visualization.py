@@ -6,11 +6,14 @@ from torchvision.utils import make_grid
 
 
 class Visualization:
-    def __init__(self, palette: list[list[int]],
-                 mean: list[float],
-                 std: list[float],
-                 threshold_value: float = 0.5,
-                 number_of_images: int = 15):
+    def __init__(
+        self,
+        palette: list[list[int]],
+        mean: list[float],
+        std: list[float],
+        threshold_value: float = 0.5,
+        number_of_images: int = 15,
+    ):
         self.palette = Tensor(palette)
         self.mean = Tensor(mean)
         self.std = Tensor(std)
@@ -25,7 +28,13 @@ class Visualization:
         outputs = torch.argmax(predict, dim=1).long()
         if target is not None:
             targets = torch.argmax(target, dim=1).long()
-            self.visual.append([inputs.data.cpu()[0].permute(1, 2, 0), outputs.data.cpu()[0], targets.data.cpu()[0]])
+            self.visual.append(
+                [
+                    inputs.data.cpu()[0].permute(1, 2, 0),
+                    outputs.data.cpu()[0],
+                    targets.data.cpu()[0],
+                ]
+            )
         else:
             self.visual.append([inputs.data.cpu()[0].permute(1, 2, 0), outputs.data.cpu()[0]])
 
@@ -53,7 +62,7 @@ class Visualization:
         colorized_mask = torch.zeros(height, width, 3)
         for color_id, rgb in enumerate(self.palette):
             colorized_mask[mask == color_id, :] = rgb
-        return colorized_mask.permute(2, 0, 1) / 255.
+        return colorized_mask.permute(2, 0, 1) / 255.0
 
     def _denormalize(self, images: Tensor) -> Tensor:
         images = images * self.std + self.mean

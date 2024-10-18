@@ -34,7 +34,9 @@ class DiceCrossEntropyLoss(nn.Module):
         self.dice = MulticlassDiceLoss(eps=dice_eps)
         self.ce = nn.CrossEntropyLoss()
 
-    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self, logits: torch.Tensor, targets: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         return self.dice(logits, targets) * self.weight, self.ce(logits, targets)
 
 
@@ -91,9 +93,7 @@ class BCEDiceBoundaryLoss(nn.Module):
         self.gamma = gamma
 
         self.bce = nn.BCEWithLogitsLoss()
-        self.dice = DiceLoss(
-            normalization=normalization, epsilon=epsilon, weights=weights
-        )
+        self.dice = DiceLoss(normalization=normalization, epsilon=epsilon, weights=weights)
         self.boundary = BoundaryLoss(is_3d=is_3d)
 
     def forward(self, inputs: Tensor, targets: Tensor) -> Tensor:

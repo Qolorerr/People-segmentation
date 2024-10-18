@@ -28,7 +28,7 @@ class Trainer:
         accelerator: Accelerator,
         train_loader: DataLoader,
         val_loader: DataLoader | None = None,
-        visualizer = None,
+        visualizer=None,
     ):
         self.model = model
         self.loss = loss
@@ -58,9 +58,7 @@ class Trainer:
         #     self.config.lr_scheduler, self.optimizer, self.epochs, len(train_loader)
         # )
         self.lr_scheduler = None
-        self.optimizer = self.accelerator.prepare(
-            self.optimizer #, self.lr_scheduler
-        )
+        self.optimizer = self.accelerator.prepare(self.optimizer)  # , self.lr_scheduler
 
         # MONITORING
         self.monitor = cfg_trainer.get("monitor", "off")
@@ -89,9 +87,7 @@ class Trainer:
             "resume",
         ]
         for info in info_to_write:
-            self.writer.add_text(
-                f"info/{info}", str(self.config[info])
-            )
+            self.writer.add_text(f"info/{info}", str(self.config[info]))
         self.checkpoint_dir = os.path.join(cfg_trainer["save_dir"], self.config["name"], start_time)
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
@@ -100,9 +96,7 @@ class Trainer:
             self._resume_checkpoint(resume)
 
         self.wrt_mode, self.wrt_step = "train", 0
-        self.log_step = cfg_trainer.get(
-            "log_per_iter", int(np.sqrt(self.train_loader.batch_size))
-        )
+        self.log_step = cfg_trainer.get("log_per_iter", int(np.sqrt(self.train_loader.batch_size)))
         if cfg_trainer["log_per_iter"]:
             self.log_step = int(self.log_step / self.train_loader.batch_size) + 1
 
@@ -156,7 +150,7 @@ class Trainer:
                 tag=f"{self.wrt_mode}/inputs_targets_predictions",
                 img_tensor=val_img,
                 global_step=self.wrt_step,
-                dataformats="CHW"
+                dataformats="CHW",
             )
 
         # METRICS TO TENSORBOARD
@@ -167,7 +161,11 @@ class Trainer:
             )
 
         # RETURN LOSS & METRICS
-        log = {"loss": self.total_loss.avg, "pixAcc": self.total_pixAcc.avg, "mIoU": self.total_IoU.avg}
+        log = {
+            "loss": self.total_loss.avg,
+            "pixAcc": self.total_pixAcc.avg,
+            "mIoU": self.total_IoU.avg,
+        }
         return log
 
     def _valid_epoch(self, epoch: int) -> dict[str, np.float_]:
@@ -200,7 +198,9 @@ class Trainer:
                 self._update_accuracy_metrics(metrics)
                 if self.visualizer:
                     self.visualizer.add_to_visual(inputs, output, targets)
-                self._print_metrics(tbar, epoch, metrics, "EVAL", dice_loss=dice_loss, ce_loss=ce_loss)
+                self._print_metrics(
+                    tbar, epoch, metrics, "EVAL", dice_loss=dice_loss, ce_loss=ce_loss
+                )
 
         # WRITING & VISUALIZING THE MASKS
         if self.visualizer:
@@ -209,15 +209,21 @@ class Trainer:
                 tag=f"{self.wrt_mode}/inputs_targets_predictions",
                 img_tensor=val_img,
                 global_step=self.wrt_step,
-                dataformats="CHW"
+                dataformats="CHW",
             )
 
         # METRICS TO TENSORBOARD
         self.wrt_step = epoch * len(self.val_loader)
-        self.writer.add_scalar(tag=f"{self.wrt_mode}/loss", scalar_value=self.total_loss.avg, global_step=self.wrt_step)
+        self.writer.add_scalar(
+            tag=f"{self.wrt_mode}/loss", scalar_value=self.total_loss.avg, global_step=self.wrt_step
+        )
         self._log_accuracy_metrics()
 
-        log = {"loss": self.total_loss.avg, "pixAcc": self.total_pixAcc.avg, "mIoU": self.total_IoU.avg}
+        log = {
+            "loss": self.total_loss.avg,
+            "pixAcc": self.total_pixAcc.avg,
+            "mIoU": self.total_IoU.avg,
+        }
 
         return log
 
@@ -274,7 +280,9 @@ class Trainer:
         for k, v in [("pixAcc", self.total_pixAcc.avg), ("mIoU", self.total_IoU.avg)]:
             self.writer.add_scalar(f"{self.wrt_mode}/{k}", v, self.wrt_step)
 
-    def _print_metrics(self, tbar: tqdm, epoch: int, metrics: PixAccIoUMetricT, mode: str = "TRAIN", **kwargs) -> None:
+    def _print_metrics(
+        self, tbar: tqdm, epoch: int, metrics: PixAccIoUMetricT, mode: str = "TRAIN", **kwargs
+    ) -> None:
         message = "{} ({}) | Loss: {:.3f}, PixelAcc: {:.2f}, Mean IoU: {:.2f}"
         message = message.format(mode, epoch, self.total_loss.avg, metrics.pixAcc, metrics.IoU)
         for key, value in kwargs.items():

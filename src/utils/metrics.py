@@ -8,7 +8,7 @@ from torch import Tensor, nn
 class AverageMeter:
     """Computes and stores the average and current value"""
 
-    def __init__(self, name, fmt=':f'):
+    def __init__(self, name, fmt=":f"):
         self.name = name
         self.fmt = fmt
         self.reset()
@@ -26,11 +26,11 @@ class AverageMeter:
         self.avg = self.sum / self.count
 
     def __str__(self) -> str:
-        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+        fmtstr = "{name} {val" + self.fmt + "} ({avg" + self.fmt + "})"
         return fmtstr.format(**self.__dict__)
 
     def average_str(self) -> str:
-        fmtstr = '{name} {avg' + self.fmt + '}'
+        fmtstr = "{name} {avg" + self.fmt + "}"
         return fmtstr.format(**self.__dict__)
 
 
@@ -40,12 +40,12 @@ PixAccIoUMetricT = namedtuple("PixAccIoUMetricT", ["IoU", "pixAcc"])
 
 class PixAccIoUMetric(nn.Module):
     def __init__(
-            self,
-            classes_num: int,
-            ignore_index: int | None = None,
-            reduction: str | None = None,
-            class_weights: list[float] | None = None,
-            threshold_value: float = 0.5,
+        self,
+        classes_num: int,
+        ignore_index: int | None = None,
+        reduction: str | None = None,
+        class_weights: list[float] | None = None,
+        threshold_value: float = 0.5,
     ) -> None:
         super().__init__()
 
@@ -57,9 +57,9 @@ class PixAccIoUMetric(nn.Module):
 
     @torch.no_grad()
     def forward(
-            self,
-            output: torch.Tensor,
-            target: torch.Tensor,
+        self,
+        output: torch.Tensor,
+        target: torch.Tensor,
     ) -> PixAccIoUMetricT:
         # from
         # https://github.com/qubvel/segmentation_models.pytorch/blob/master
@@ -77,39 +77,19 @@ class PixAccIoUMetric(nn.Module):
             outputs = torch.where(ignore, -1, outputs)
             targets = torch.where(ignore, -1, targets)
 
-        tp_count = cast(
-            LongTensorT, torch.zeros(batch_size, self.cls_num, dtype=torch.long)
-        )
-        fp_count = cast(
-            LongTensorT, torch.zeros(batch_size, self.cls_num, dtype=torch.long)
-        )
-        fn_count = cast(
-            LongTensorT, torch.zeros(batch_size, self.cls_num, dtype=torch.long)
-        )
-        tn_count = cast(
-            LongTensorT, torch.zeros(batch_size, self.cls_num, dtype=torch.long)
-        )
+        tp_count = cast(LongTensorT, torch.zeros(batch_size, self.cls_num, dtype=torch.long))
+        fp_count = cast(LongTensorT, torch.zeros(batch_size, self.cls_num, dtype=torch.long))
+        fn_count = cast(LongTensorT, torch.zeros(batch_size, self.cls_num, dtype=torch.long))
+        tn_count = cast(LongTensorT, torch.zeros(batch_size, self.cls_num, dtype=torch.long))
 
         for i in range(batch_size):
             target_i = targets[i]
             output_i = outputs[i]
             mask = output_i == target_i
             matched = torch.where(mask, target_i, -1)
-            tp = torch.histc(
-                matched.float(), bins=self.cls_num, min=0, max=self.cls_num - 1
-            )
-            fp = (
-                    torch.histc(
-                        output_i.float(), bins=self.cls_num, min=0, max=self.cls_num - 1
-                    )
-                    - tp
-            )
-            fn = (
-                    torch.histc(
-                        target_i.float(), bins=self.cls_num, min=0, max=self.cls_num - 1
-                    )
-                    - tp
-            )
+            tp = torch.histc(matched.float(), bins=self.cls_num, min=0, max=self.cls_num - 1)
+            fp = torch.histc(output_i.float(), bins=self.cls_num, min=0, max=self.cls_num - 1) - tp
+            fn = torch.histc(target_i.float(), bins=self.cls_num, min=0, max=self.cls_num - 1) - tp
 
             tp_count[i] = tp.long()
             fp_count[i] = fp.long()
@@ -123,16 +103,16 @@ class PixAccIoUMetric(nn.Module):
                 fn=fn_count,
                 reduction=self.reduction,
                 class_weights=self.class_weights,
-            ), _compute_pix_acc_metric(
-                tp=tp_count, tn=tn_count, height=height, width=width
-            ))
+            ),
+            _compute_pix_acc_metric(tp=tp_count, tn=tn_count, height=height, width=width),
+        )
 
 
 def _compute_pix_acc_metric(
-        tp: LongTensorT,
-        tn: LongTensorT,
-        height: int,
-        width: int,
+    tp: LongTensorT,
+    tn: LongTensorT,
+    height: int,
+    width: int,
 ) -> torch.Tensor:
     if height * width == 0:
         return torch.tensor(0.0)
@@ -146,16 +126,14 @@ def _compute_pix_acc_metric(
 
 
 def _compute_iou_metric(
-        tp: LongTensorT,
-        fp: LongTensorT,
-        fn: LongTensorT,
-        reduction: str | None = None,
-        class_weights: list[float] | None = None,
+    tp: LongTensorT,
+    fp: LongTensorT,
+    fn: LongTensorT,
+    reduction: str | None = None,
+    class_weights: list[float] | None = None,
 ) -> torch.Tensor:
     if class_weights is None and reduction is not None and "weighted" in reduction:
-        raise ValueError(
-            f"Class weights should be provided for `{reduction}` reduction."
-        )
+        raise ValueError(f"Class weights should be provided for `{reduction}` reduction.")
 
     class_weights = class_weights if class_weights is not None else 1.0
     class_weights = torch.tensor(class_weights).to(tp.device)

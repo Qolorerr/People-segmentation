@@ -9,7 +9,13 @@ from src.base import BaseDataset
 
 
 class CityscapesDataset(BaseDataset):
-    def __init__(self, id_to_train_id: dict[int, int], mode: str = "fine", load_limit: int | None = None, **kwargs):
+    def __init__(
+        self,
+        id_to_train_id: dict[int, int],
+        mode: str = "fine",
+        load_limit: int | None = None,
+        **kwargs
+    ):
         self.id_to_train_id = id_to_train_id
         self.num_classes = len(set(id_to_train_id.values()))
         self.mode = mode
@@ -52,7 +58,7 @@ class CityscapesDataset(BaseDataset):
         #     self.files = self.files[:self.load_limit]
 
     def _set_test_files(self) -> None:
-        assert (self.mode == "fine" and self.split == "test")
+        assert self.mode == "fine" and self.split == "test"
 
         # Get images and labels folders
         image_folder_path = os.path.join(

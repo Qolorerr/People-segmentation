@@ -55,7 +55,6 @@ class BaseDataset(Dataset):
         image = transformed["image"]
         return image.float()
 
-
     def __repr__(self) -> str:
         fmt_str = f"Dataset: {self.__class__.__name__}\n"
         fmt_str += f"\t# data: {self.__len__()}\n"

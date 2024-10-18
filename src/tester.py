@@ -48,9 +48,7 @@ class Tester:
             "save_file",
         ]
         for info in info_to_write:
-            self.writer.add_text(
-                f"info/{info}", str(self.config[info])
-            )
+            self.writer.add_text(f"info/{info}", str(self.config[info]))
 
         self.threshold_value = self.config.get("threshold_value", 0.5)
 
@@ -77,7 +75,7 @@ class Tester:
             tag=f"{self.wrt_mode}/inputs_predictions",
             img_tensor=test_img,
             global_step=self.wrt_step,
-            dataformats="CHW"
+            dataformats="CHW",
         )
         input("Enter anything")
 
